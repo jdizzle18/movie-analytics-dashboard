@@ -2,9 +2,34 @@
 
 {% block content %}
 <h1>Analytics Dashboard</h1>
-<p>Total Movies: {{ total_movies }}</p>
-<p>Average Rating: {{ avg_rating }}</p>
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Total Movies</h5>
+                <p class="display-6">{{ total_movies }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Average Rating</h5>
+                <p class="display-6">{{ avg_rating }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Total Revenue</h5>
+                <p class="display-6">${{ '{:,.0f}'.format(total_revenue) }}</p>
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- Genre Distribution Pie Chart -->
 <div class="row mt-4">
     <div class="col-md-8 mx-auto">
         <div class="card">
@@ -15,10 +40,55 @@
         </div>
     </div>
 </div>
+
+<!-- Movies by Year Bar Chart -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-center">Movies by Release Year</h5>
+                <canvas id="yearChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Genre Ratings + Top Companies -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title text-center">Average Rating by Genre</h5>
+                <canvas id="genreRatingsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title text-center">Top Production Companies</h5>
+                <canvas id="companiesChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Budget vs Revenue -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-center">Budget vs Revenue (Top 20)</h5>
+                <canvas id="budgetRevenueChart" style="min-height: 500px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+    // --- Genre Distribution Pie Chart (existing) ---
     const genreLabels = {{ genre_stats | map(attribute='name') | list | tojson }};
     const genreCounts = {{ genre_stats | map(attribute='count') | list | tojson }};
 
@@ -41,6 +111,182 @@
             plugins: {
                 legend: {
                     position: 'right'
+                }
+            }
+        }
+    });
+
+    // --- Movies by Release Year Bar Chart ---
+    const yearLabels = {{ year_stats | map(attribute='year') | list | tojson }};
+    const yearCounts = {{ year_stats | map(attribute='count') | list | tojson }};
+
+    new Chart(document.getElementById('yearChart'), {
+        type: 'bar',
+        data: {
+            labels: yearLabels,
+            datasets: [{
+                label: 'Number of Movies',
+                data: yearCounts,
+                backgroundColor: '#3498db',
+                borderColor: '#2980b9',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Movie Count' }
+                },
+                x: {
+                    title: { display: true, text: 'Year' }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // --- Average Rating by Genre Horizontal Bar Chart ---
+    const ratingGenreLabels = {{ genre_ratings | map(attribute='name') | list | tojson }};
+    const ratingGenreAvgs = {{ genre_ratings | map(attribute='avg_rating') | list | tojson }};
+    const ratingGenreCounts = {{ genre_ratings | map(attribute='count') | list | tojson }};
+
+    new Chart(document.getElementById('genreRatingsChart'), {
+        type: 'bar',
+        data: {
+            labels: ratingGenreLabels,
+            datasets: [{
+                label: 'Avg Rating',
+                data: ratingGenreAvgs.map(v => parseFloat(v).toFixed(1)),
+                backgroundColor: '#2ecc71',
+                borderColor: '#27ae60',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    max: 10,
+                    title: { display: true, text: 'Average Rating' }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            return 'Movies: ' + ratingGenreCounts[context.dataIndex];
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // --- Top Production Companies Bar Chart ---
+    const companyLabels = {{ top_companies | map(attribute='name') | list | tojson }};
+    const companyCounts = {{ top_companies | map(attribute='movie_count') | list | tojson }};
+    const companyRatings = {{ top_companies | map(attribute='avg_rating') | list | tojson }};
+
+    new Chart(document.getElementById('companiesChart'), {
+        type: 'bar',
+        data: {
+            labels: companyLabels,
+            datasets: [{
+                label: 'Movie Count',
+                data: companyCounts,
+                backgroundColor: '#9b59b6',
+                borderColor: '#8e44ad',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Number of Movies' }
+                },
+                x: {
+                    ticks: { maxRotation: 45, minRotation: 45 }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            return 'Avg Rating: ' + parseFloat(companyRatings[context.dataIndex]).toFixed(1);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // --- Budget vs Revenue Grouped Horizontal Bar Chart ---
+    const brLabels = [
+        {% for movie in budget_revenue %}'{{ movie.title | replace("'", "\\'") }}'{% if not loop.last %}, {% endif %}{% endfor %}
+    ];
+    const brBudgets = [
+        {% for movie in budget_revenue %}{{ movie.budget }}{% if not loop.last %}, {% endif %}{% endfor %}
+    ];
+    const brRevenues = [
+        {% for movie in budget_revenue %}{{ movie.revenue }}{% if not loop.last %}, {% endif %}{% endfor %}
+    ];
+
+    new Chart(document.getElementById('budgetRevenueChart'), {
+        type: 'bar',
+        data: {
+            labels: brLabels,
+            datasets: [
+                {
+                    label: 'Budget',
+                    data: brBudgets,
+                    backgroundColor: '#e74c3c',
+                    borderColor: '#c0392b',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Revenue',
+                    data: brRevenues,
+                    backgroundColor: '#2ecc71',
+                    borderColor: '#27ae60',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Amount (USD)' },
+                    ticks: {
+                        callback: function(value) {
+                            if (value >= 1e9) return '$' + (value / 1e9).toFixed(1) + 'B';
+                            if (value >= 1e6) return '$' + (value / 1e6).toFixed(0) + 'M';
+                            return '$' + value;
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            var val = context.raw;
+                            return context.dataset.label + ': $' + val.toLocaleString();
+                        }
+                    }
                 }
             }
         }
