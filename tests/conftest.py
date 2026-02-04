@@ -58,6 +58,7 @@ def db_session():
     session.close()
     Base.metadata.drop_all(engine)
 
+
 @pytest.fixture
 def sample_genre(db_session):
     """Create a sample genre"""
@@ -86,32 +87,6 @@ def sample_movie(db_session, sample_genre):
         budget=63000000,
         revenue=100853753,
         runtime=139
-        # Removed: original_language and status (not in your model)
-    )
-    movie.genres.append(sample_genre)
-    db_session.add(movie)
-    db_session.commit()
-    return movie
-
-
-@pytest.fixture
-def sample_movie(db_session, sample_genre):
-    """Create a sample movie with genre"""
-    movie = Movie(
-        tmdb_id=550,
-        title="Fight Club",
-        overview="An insomniac office worker and a devil-may-care soap maker form an underground fight club.",
-        release_date=datetime.strptime("1999-10-15", "%Y-%m-%d").date(),
-        vote_average=8.4,
-        vote_count=25000,
-        popularity=50.5,
-        poster_path="/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
-        backdrop_path="/fCayJrkfRaCRCTh8GqN30f8oyQF.jpg",
-        budget=63000000,
-        revenue=100853753,
-        runtime=139,
-        #original_language="en",
-        #status="Released"
     )
     movie.genres.append(sample_genre)
     db_session.add(movie)
@@ -152,7 +127,6 @@ def sample_person(db_session):
         tmdb_id=287,
         name="Brad Pitt",
         profile_path="/kU3B75TyRiCgE270EyZnHjfivoq.jpg"
-        # Removed: known_for_department (not in your model)
     )
     db_session.add(person)
     db_session.commit()
@@ -165,7 +139,7 @@ def sample_cast(db_session, sample_movie, sample_person):
     cast = Cast(
         movie_id=sample_movie.id,
         person_id=sample_person.id,
-        character="Tyler Durden",
+        character_name="Tyler Durden",
         cast_order=0
     )
     db_session.add(cast)
@@ -178,8 +152,7 @@ def sample_crew(db_session, sample_movie):
     """Create a sample crew member (director)"""
     director = Person(
         tmdb_id=7467,
-        name="David Fincher",
-        known_for_department="Directing"
+        name="David Fincher"
     )
     db_session.add(director)
     db_session.commit()

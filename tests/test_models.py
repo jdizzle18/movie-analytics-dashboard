@@ -25,7 +25,7 @@ class TestMovieModel:
         
         assert movie.id is not None
         assert movie.title == "Test Movie"
-        assert movie.vote_average == 7.5
+        assert float(movie.vote_average) == 7.5
     
     def test_movie_str_representation(self, sample_movie):
         """Test movie string representation"""
@@ -67,9 +67,9 @@ class TestMovieModel:
     
     def test_movie_rating_data(self, sample_movie):
         """Test movie rating data"""
-        assert sample_movie.vote_average == 8.4
+        assert float(sample_movie.vote_average) == 8.4
         assert sample_movie.vote_count == 25000
-        assert 0 <= sample_movie.vote_average <= 10
+        assert 0 <= float(sample_movie.vote_average) <= 10
 
 
 class TestGenreModel:
@@ -107,8 +107,7 @@ class TestPersonModel:
         """Test creating a person"""
         person = Person(
             tmdb_id=287,
-            name="Brad Pitt",
-            # known_for_department="Acting"
+            name="Brad Pitt"
         )
         db_session.add(person)
         db_session.commit()
@@ -134,14 +133,14 @@ class TestCastModel:
         cast = Cast(
             movie_id=sample_movie.id,
             person_id=sample_person.id,
-            character="Tyler Durden",
+            character_name="Tyler Durden",
             cast_order=0
         )
         db_session.add(cast)
         db_session.commit()
         
         assert cast.id is not None
-        assert cast.character == "Tyler Durden"
+        assert cast.character_name == "Tyler Durden"
         assert cast.cast_order == 0
     
     def test_cast_relationships(self, sample_cast, sample_movie, sample_person):
@@ -154,7 +153,7 @@ class TestCastModel:
         cast1 = Cast(
             movie_id=sample_movie.id,
             person_id=sample_person.id,
-            character="Character 1",
+            character_name="Character 1",
             cast_order=0
         )
         
@@ -165,7 +164,7 @@ class TestCastModel:
         cast2 = Cast(
             movie_id=sample_movie.id,
             person_id=person2.id,
-            character="Character 2",
+            character_name="Character 2",
             cast_order=1
         )
         
