@@ -4,6 +4,9 @@ from datetime import datetime
 from src.app import app
 from src.models import Base, Genre, Movie, Rating, Review, Session, User, engine
 
+# Initialize database tables before running tests
+Base.metadata.create_all(engine)
+
 
 class TestAuthentication(unittest.TestCase):
     """Test user authentication functionality"""
